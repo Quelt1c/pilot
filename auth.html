@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotFlow — Увійти</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a26;
+    --border: #2a2a3e;
+    --border2: #3a3a55;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --accent5: #4facfe;
+    --text: #e8e8f0;
+    --text2: #8888aa;
+    --text3: #44445a;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* ─── LAYOUT ─── */
+  .page {
+    display: grid;
+    grid-template-columns: 1fr 480px;
+    height: 100vh;
+  }
+
+  /* ─── LEFT PANEL (брендова частина з анімацією) ─── */
+  .left {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px 48px;
+    border-right: 1px solid var(--border);
+  }
+
+  /* Сітка на фоні */
+  .left::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.5;
+  }
+
+  /* Градієнтна пляма */
+  .glow-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+  .glow-blob-1 {
+    width: 500px; height: 500px;
+    background: var(--accent);
+    top: -100px; left: -100px;
+    animation-delay: 0s;
+  }
+  .glow-blob-2 {
+    width: 400px; height: 400px;
+    background: var(--accent5);
+    bottom: -80px; right: -80px;
+    animation-delay: -6s;
+  }
+  .glow-blob-3 {
+    width: 300px; height: 300px;
+    background: var(--accent3);
+    top: 40%; left: 30%;
+    animation-delay: -3s;
+  }
+
+  @keyframes drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(40px, 30px) scale(1.1); }
+  }
+
+  .left-logo {
+    position: relative;
+    z-index: 2;
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent5));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  .left-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .left-headline {
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    margin-bottom: 20px;
+  }
+
+  .left-headline .hl {
+    background: linear-gradient(135deg, var(--accent), var(--accent5));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .left-sub {
+    font-size: 15px;
+    color: var(--text2);
+    line-height: 1.7;
+    max-width: 420px;
+    margin-bottom: 40px;
+  }
+
+  /* Плаваючі картки-блоки */
+  .flow-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 380px;
+  }
+
+  .fp-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .fp-node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    animation: floatCard 6s ease-in-out infinite alternate;
+  }
+
+  .fp-node:nth-child(2) { animation-delay: -2s; }
+  .fp-node:nth-child(3) { animation-delay: -4s; }
+
+  @keyframes floatCard {
+    0%   { transform: translateY(0); }
+    100% { transform: translateY(-6px); }
+  }
+
+  .fp-icon {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+
+  .fp-arrow {
+    color: var(--text3);
+    font-size: 16px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .left-footer {
+    position: relative;
+    z-index: 2;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ─── RIGHT PANEL (форма) ─── */
+  .right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 48px 52px;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Тонка декоративна лінія зверху */
+  .right::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 52px; right: 52px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.4;
+  }
+
+  /* Панелі Login і Signup — перемикаємось через JS */
+  .auth-panel {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    animation: slideIn 0.3s ease;
+  }
+  .auth-panel.active { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .auth-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    margin-bottom: 6px;
+  }
+
+  .auth-sub {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  .auth-sub a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color .15s;
+  }
+  .auth-sub a:hover { color: #9b94ff; }
+
+  /* Google Button */
+  .btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 13px 20px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border2);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-google::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.03), transparent);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  .btn-google:hover {
+    border-color: var(--text2);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+  }
+  .btn-google:hover::after { opacity: 1; }
+  .btn-google:active { transform: translateY(0); }
+
+  .google-icon {
+    width: 20px; height: 20px;
+    flex-shrink: 0;
+  }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    color: var(--text3);
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Form fields */
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .field-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+
+  .field-wrap {
+    position: relative;
+  }
+
+  .field-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border2);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .field-input::placeholder { color: var(--text3); }
+  .field-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+  }
+
+  .field-input.has-icon { padding-right: 44px; }
+
+  .field-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 16px;
+    transition: color .15s;
+    user-select: none;
+    line-height: 1;
+  }
+  .field-icon:hover { color: var(--text2); }
+
+  /* Two columns for name fields */
+  .fields-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Forgot password link */
+  .forgot-link {
+    text-align: right;
+    margin-bottom: 20px;
+    margin-top: -6px;
+  }
+  .forgot-link a {
+    font-size: 12px;
+    color: var(--text2);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .forgot-link a:hover { color: var(--accent); }
+
+  /* Submit button */
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    box-shadow: 0 0 24px rgba(108,99,255,0.35);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 20px;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-submit::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left .4s;
+  }
+
+  .btn-submit:hover {
+    background: #7c74ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 30px rgba(108,99,255,0.55);
+  }
+  .btn-submit:hover::before { left: 100%; }
+  .btn-submit:active { transform: translateY(0); }
+
+  /* Terms (only signup) */
+  .terms {
+    font-size: 11px;
+    color: var(--text3);
+    text-align: center;
+    line-height: 1.6;
+  }
+  .terms a {
+    color: var(--text2);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+
+  /* Error message */
+  .field-error {
+    font-size: 11px;
+    color: var(--accent2);
+    font-family: 'JetBrains Mono', monospace;
+    display: none;
+  }
+  .field-group.has-error .field-input { border-color: var(--accent2); }
+  .field-group.has-error .field-error { display: block; }
+
+  /* Success flash */
+  .success-flash {
+    position: fixed;
+    inset: 0;
+    background: rgba(67,233,123,0.08);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .3s;
+    z-index: 100;
+  }
+  .success-flash.show { opacity: 1; }
+
+  /* Loading spinner on button */
+  .btn-submit.loading {
+    pointer-events: none;
+    color: transparent;
+  }
+  .btn-submit.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px; height: 20px;
+    border: 2.5px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .page { grid-template-columns: 1fr; }
+    .left { display: none; }
+    .right { padding: 40px 32px; }
+  }
+
+  /* ─── PAGE ENTRY ANIMATION ─── */
+  .right > * {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fadeUp .5s ease forwards;
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .auth-panel.active .auth-title   { animation-delay: .05s; }
+  .auth-panel.active .auth-sub     { animation-delay: .1s; }
+  .auth-panel.active .btn-google   { animation-delay: .15s; }
+  .auth-panel.active .divider      { animation-delay: .2s; }
+  .auth-panel.active .field-group  { animation-delay: .22s; }
+  .auth-panel.active .btn-submit   { animation-delay: .28s; }
+</style>
+</head>
+<body>
+
+<div class="success-flash" id="successFlash"></div>
+
+<div class="page">
+
+  <!-- ─── ЛІВА ПАНЕЛЬ ─── -->
+  <div class="left">
+    <div class="glow-blob glow-blob-1"></div>
+    <div class="glow-blob glow-blob-2"></div>
+    <div class="glow-blob glow-blob-3"></div>
+
+    <div class="left-logo">⚡ BotFlow</div>
+
+    <div class="left-content">
+      <h1 class="left-headline">
+        Автоматизуй<br>
+        продажі у<br>
+        <span class="hl">месенджерах</span>
+      </h1>
+      <p class="left-sub">
+        Будуй схеми відповідей без коду. Підключай Telegram, Instagram,
+        Facebook — і бот сам продає, приймає оплату і видає доступ.
+      </p>
+
+      <div class="flow-preview">
+        <div class="fp-row">
+          <div class="fp-node">
+            <div class="fp-icon" style="background:rgba(67,233,123,0.2)">🟢</div>
+            Старт
+          </div>
+          <div class="fp-arrow">→</div>
+          <div class="fp-node">
+            <div class="fp-icon" style="background:rgba(108,99,255,0.2)">💬</div>
+            Повідомлення
+          </div>
+          <div class="fp-arrow">→</div>
+          <div class="fp-node">
+            <div class="fp-icon" style="background:rgba(79,172,254,0.2)">🛍️</div>
+            Товар
+          </div>
+        </div>
+        <div class="fp-row" style="padding-left:60px">
+          <div class="fp-node">
+            <div class="fp-icon" style="background:rgba(255,101,132,0.2)">💳</div>
+            Оплата
+          </div>
+          <div class="fp-arrow">→</div>
+          <div class="fp-node">
+            <div class="fp-icon" style="background:rgba(67,233,123,0.15)">✅</div>
+            Перевірка
+          </div>
+          <div class="fp-arrow">→</div>
+          <div class="fp-node">
+            <div class="fp-icon" style="background:rgba(108,99,255,0.15)">🔗</div>
+            Доступ
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="left-footer">© 2025 BotFlow · Всі права захищено</div>
+  </div>
+
+  <!-- ─── ПРАВА ПАНЕЛЬ ─── -->
+  <div class="right">
+
+    <!-- LOGIN PANEL -->
+    <div class="auth-panel active" id="panel-login">
+
+      <div class="auth-title">З поверненням 👋</div>
+      <div class="auth-sub">
+        Ще немає акаунту?
+        <a onclick="switchTo('signup')">Зареєструватись</a>
+      </div>
+
+      <button class="btn-google" onclick="handleGoogle()">
+        <svg class="google-icon" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Продовжити з Google
+      </button>
+
+      <div class="divider">або через email</div>
+
+      <div class="field-group" id="fg-login-email">
+        <label class="field-label">Email</label>
+        <div class="field-wrap">
+          <input class="field-input" id="login-email" type="email"
+            placeholder="you@example.com" autocomplete="email"
+            oninput="clearError('fg-login-email')">
+        </div>
+        <span class="field-error" id="err-login-email">Введіть коректний email</span>
+      </div>
+
+      <div class="field-group" id="fg-login-pass">
+        <label class="field-label">Пароль</label>
+        <div class="field-wrap">
+          <input class="field-input has-icon" id="login-pass" type="password"
+            placeholder="••••••••" autocomplete="current-password"
+            oninput="clearError('fg-login-pass')"
+            onkeydown="if(event.key==='Enter') submitLogin()">
+          <span class="field-icon" onclick="togglePass('login-pass', this)">👁</span>
+        </div>
+        <span class="field-error" id="err-login-pass">Введіть пароль</span>
+      </div>
+
+      <div class="forgot-link">
+        <a onclick="showForgot()">Забули пароль?</a>
+      </div>
+
+      <button class="btn-submit" id="btn-login" onclick="submitLogin()">
+        Увійти
+      </button>
+
+    </div>
+
+    <!-- SIGNUP PANEL -->
+    <div class="auth-panel" id="panel-signup">
+
+      <div class="auth-title">Створити акаунт</div>
+      <div class="auth-sub">
+        Вже є акаунт?
+        <a onclick="switchTo('login')">Увійти</a>
+      </div>
+
+      <button class="btn-google" onclick="handleGoogle()">
+        <svg class="google-icon" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Зареєструватись з Google
+      </button>
+
+      <div class="divider">або через email</div>
+
+      <div class="fields-row">
+        <div class="field-group" id="fg-signup-fname">
+          <label class="field-label">Ім'я</label>
+          <input class="field-input" id="signup-fname" type="text"
+            placeholder="Іван" autocomplete="given-name"
+            oninput="clearError('fg-signup-fname')">
+          <span class="field-error">Введіть ім'я</span>
+        </div>
+        <div class="field-group" id="fg-signup-lname">
+          <label class="field-label">Прізвище</label>
+          <input class="field-input" id="signup-lname" type="text"
+            placeholder="Петренко" autocomplete="family-name">
+        </div>
+      </div>
+
+      <div class="field-group" id="fg-signup-email">
+        <label class="field-label">Email</label>
+        <div class="field-wrap">
+          <input class="field-input" id="signup-email" type="email"
+            placeholder="you@example.com" autocomplete="email"
+            oninput="clearError('fg-signup-email')">
+        </div>
+        <span class="field-error">Введіть коректний email</span>
+      </div>
+
+      <div class="field-group" id="fg-signup-pass">
+        <label class="field-label">Пароль</label>
+        <div class="field-wrap">
+          <input class="field-input has-icon" id="signup-pass" type="password"
+            placeholder="Мін. 8 символів" autocomplete="new-password"
+            oninput="checkPasswordStrength(this.value); clearError('fg-signup-pass')"
+            onkeydown="if(event.key==='Enter') submitSignup()">
+          <span class="field-icon" onclick="togglePass('signup-pass', this)">👁</span>
+        </div>
+        <span class="field-error" id="err-signup-pass">Мінімум 8 символів</span>
+        <!-- Password strength bar -->
+        <div id="pass-strength" style="display:none;margin-top:6px;">
+          <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;">
+            <div id="pass-strength-bar" style="height:100%;width:0%;transition:width .3s,background .3s;border-radius:2px;"></div>
+          </div>
+          <div id="pass-strength-label" style="font-size:10px;font-family:'JetBrains Mono',monospace;margin-top:4px;color:var(--text3);"></div>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="btn-signup" onclick="submitSignup()"
+        style="margin-top:4px">
+        Створити акаунт
+      </button>
+
+      <p class="terms">
+        Реєструючись, ви погоджуєтесь з
+        <a>Умовами використання</a> та <a>Політикою конфіденційності</a>
+      </p>
+
+    </div>
+
+    <!-- FORGOT PASSWORD PANEL -->
+    <div class="auth-panel" id="panel-forgot">
+
+      <div class="auth-title">Відновлення паролю</div>
+      <div class="auth-sub">
+        Вкажіть email і ми надішлемо посилання для відновлення.<br>
+        <a onclick="switchTo('login')">← Назад до входу</a>
+      </div>
+
+      <div class="field-group" id="fg-forgot-email">
+        <label class="field-label">Email</label>
+        <div class="field-wrap">
+          <input class="field-input" id="forgot-email" type="email"
+            placeholder="you@example.com"
+            onkeydown="if(event.key==='Enter') submitForgot()">
+        </div>
+        <span class="field-error">Введіть коректний email</span>
+      </div>
+
+      <button class="btn-submit" id="btn-forgot" onclick="submitForgot()"
+        style="margin-top:8px">
+        Надіслати посилання
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────
+// ПЕРЕМИКАННЯ ПАНЕЛЕЙ
+// ─────────────────────────────────────
+function switchTo(panel) {
+  document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + panel).classList.add('active');
+}
+
+function showForgot() {
+  switchTo('forgot');
+}
+
+// ─────────────────────────────────────
+// ПОКАЗАТИ/СХОВАТИ ПАРОЛЬ
+// ─────────────────────────────────────
+function togglePass(inputId, icon) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    icon.textContent = '👁';
+  }
+}
+
+// ─────────────────────────────────────
+// STRENGTH BAR
+// ─────────────────────────────────────
+function checkPasswordStrength(val) {
+  const wrap = document.getElementById('pass-strength');
+  const bar  = document.getElementById('pass-strength-bar');
+  const lbl  = document.getElementById('pass-strength-label');
+
+  if (!val) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  let score = 0;
+  if (val.length >= 8)  score++;
+  if (val.length >= 12) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+
+  const levels = [
+    { pct: '20%', color: '#ff6584', label: 'Дуже слабкий' },
+    { pct: '40%', color: '#f7971e', label: 'Слабкий' },
+    { pct: '60%', color: '#ffd700', label: 'Середній' },
+    { pct: '80%', color: '#4facfe', label: 'Сильний' },
+    { pct: '100%', color: '#43e97b', label: 'Відмінний' },
+  ];
+
+  const lvl = levels[Math.min(score, 4)];
+  bar.style.width = lvl.pct;
+  bar.style.background = lvl.color;
+  lbl.textContent = lvl.label;
+  lbl.style.color = lvl.color;
+}
+
+// ─────────────────────────────────────
+// ВАЛІДАЦІЯ
+// ─────────────────────────────────────
+function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+function setError(groupId) {
+  document.getElementById(groupId).classList.add('has-error');
+}
+
+function clearError(groupId) {
+  const el = document.getElementById(groupId);
+  if (el) el.classList.remove('has-error');
+}
+
+// ─────────────────────────────────────
+// LOGIN
+// ─────────────────────────────────────
+function submitLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  let valid = true;
+
+  if (!isValidEmail(email)) { setError('fg-login-email'); valid = false; }
+  if (!pass)                 { setError('fg-login-pass');  valid = false; }
+  if (!valid) return;
+
+  const btn = document.getElementById('btn-login');
+  btn.classList.add('loading');
+
+  // Тут буде реальний fetch до /api/auth/login
+  // fetch('/api/auth/login', { method:'POST', ... })
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    onSuccess('Вхід успішний! Перенаправляємо...');
+    // window.location.href = '/';
+  }, 1400);
+}
+
+// ─────────────────────────────────────
+// SIGNUP
+// ─────────────────────────────────────
+function submitSignup() {
+  const fname = document.getElementById('signup-fname').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const pass  = document.getElementById('signup-pass').value;
+  let valid = true;
+
+  if (!fname)                { setError('fg-signup-fname'); valid = false; }
+  if (!isValidEmail(email))  { setError('fg-signup-email'); valid = false; }
+  if (pass.length < 8)       { setError('fg-signup-pass');  valid = false; }
+  if (!valid) return;
+
+  const btn = document.getElementById('btn-signup');
+  btn.classList.add('loading');
+
+  // fetch('/api/auth/register', { method:'POST', ... })
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    onSuccess('Акаунт створено! Перевірте email.');
+  }, 1400);
+}
+
+// ─────────────────────────────────────
+// FORGOT PASSWORD
+// ─────────────────────────────────────
+function submitForgot() {
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!isValidEmail(email)) { setError('fg-forgot-email'); return; }
+
+  const btn = document.getElementById('btn-forgot');
+  btn.classList.add('loading');
+
+  // fetch('/api/auth/forgot', { method:'POST', ... })
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    btn.textContent = '✓ Надіслано!';
+    btn.style.background = 'var(--accent3)';
+    btn.style.boxShadow = '0 0 24px rgba(67,233,123,0.4)';
+    btn.style.color = '#0a1a0f';
+    setTimeout(() => {
+      btn.textContent = 'Надіслати посилання';
+      btn.style.background = '';
+      btn.style.boxShadow = '';
+      btn.style.color = '';
+    }, 3000);
+  }, 1000);
+}
+
+// ─────────────────────────────────────
+// GOOGLE AUTH
+// ─────────────────────────────────────
+function handleGoogle() {
+  // Тут буде реальний OAuth redirect:
+  // window.location.href = '/api/auth/google';
+  const flash = document.getElementById('successFlash');
+  flash.classList.add('show');
+  setTimeout(() => flash.classList.remove('show'), 400);
+  alert('Google OAuth: підключіть через flask-dance або authlib\n(window.location.href = \'/api/auth/google\')');
+}
+
+// ─────────────────────────────────────
+// SUCCESS STATE
+// ─────────────────────────────────────
+function onSuccess(msg) {
+  const flash = document.getElementById('successFlash');
+  flash.classList.add('show');
+  setTimeout(() => flash.classList.remove('show'), 600);
+
+  // Показуємо зелений стан на кнопці
+  const btns = document.querySelectorAll('.btn-submit');
+  btns.forEach(btn => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ ' + msg;
+    btn.style.background = 'var(--accent3)';
+    btn.style.boxShadow = '0 0 30px rgba(67,233,123,0.5)';
+    btn.style.color = '#071a0c';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.background = '';
+      btn.style.boxShadow = '';
+      btn.style.color = '';
+    }, 3000);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotFlow Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a26;
+    --border: #2a2a3e;
+    --border2: #3a3a55;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --accent4: #f7971e;
+    --accent5: #4facfe;
+    --text: #e8e8f0;
+    --text2: #8888aa;
+    --text3: #5555777;
+    --node-w: 220px;
+    --glow: 0 0 20px rgba(108,99,255,0.3);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0 20px;
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent5));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .template-name {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    padding: 4px 8px;
+    outline: none;
+    max-width: 280px;
+    transition: border-color .2s;
+  }
+  .template-name:focus { border-color: var(--accent); }
+
+  .header-actions { display: flex; gap: 8px; margin-left: auto; align-items: center; }
+
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .15s;
+    border: 1px solid transparent;
+    letter-spacing: 0.3px;
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--border2);
+    color: var(--text2);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 16px rgba(108,99,255,0.4);
+  }
+  .btn-primary:hover { background: #7c74ff; box-shadow: 0 0 24px rgba(108,99,255,0.6); }
+  .btn-deploy {
+    background: linear-gradient(135deg, var(--accent3), var(--accent5));
+    color: #0a1a0f;
+    font-weight: 700;
+  }
+  .btn-deploy:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(67,233,123,0.4); }
+
+  /* ─── LAYOUT ─── */
+  .workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ─── LEFT SIDEBAR ─── */
+  .sidebar-left {
+    width: 200px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+
+  .sidebar-section {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-section-title {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 10px;
+  }
+
+  .node-palette-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+    cursor: grab;
+    background: var(--surface2);
+    transition: all .15s;
+    user-select: none;
+  }
+  .node-palette-item:hover {
+    border-color: var(--accent);
+    transform: translateX(3px);
+    box-shadow: var(--glow);
+  }
+  .node-palette-item:active { cursor: grabbing; }
+
+  .node-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .node-label { font-size: 12px; font-weight: 600; }
+  .node-sublabel { font-size: 10px; color: var(--text2); }
+
+  /* ─── CANVAS ─── */
+  #canvas-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 32px 32px;
+    cursor: default;
+  }
+
+  #canvas-wrap.panning { cursor: grab; }
+  #canvas-wrap.panning:active { cursor: grabbing; }
+
+  #canvas {
+    position: absolute;
+    top: 0; left: 0;
+    transform-origin: 0 0;
+  }
+
+  /* SVG connections */
+  #svg-layer {
+    position: absolute;
+    top: 0; left: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  /* ─── NODES ─── */
+  .flow-node {
+    position: absolute;
+    width: 220px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border2);
+    background: var(--surface);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    cursor: move;
+    user-select: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .flow-node:hover { border-color: var(--accent); box-shadow: var(--glow); }
+  .flow-node.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(108,99,255,0.3), var(--glow);
+  }
+
+  .node-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    border-radius: 10px 10px 0 0;
+  }
+
+  .node-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .node-body {
+    padding: 10px 12px;
+    font-size: 11px;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.5;
+    min-height: 36px;
+    max-height: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .node-footer {
+    padding: 6px 12px 8px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .node-tag {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* Port handles */
+  .port {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--border2);
+    cursor: crosshair;
+    transition: all .15s;
+    z-index: 10;
+  }
+  .port:hover { background: var(--accent); border-color: var(--accent); transform: scale(1.3); }
+  .port-out { right: -7px; }
+  .port-in { left: -7px; }
+  .port-top { top: 50%; transform: translateY(-50%); }
+
+  /* ─── RIGHT PANEL ─── */
+  .panel-right {
+    width: 280px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+
+  .panel-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+
+  .panel-content { padding: 16px; flex: 1; }
+
+  .field-group { margin-bottom: 16px; }
+  .field-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+
+  .field-input, .field-textarea, .field-select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color .15s;
+    resize: none;
+  }
+  .field-input:focus, .field-textarea:focus, .field-select:focus { border-color: var(--accent); }
+  .field-textarea { min-height: 80px; line-height: 1.6; }
+  .field-select { cursor: pointer; }
+  .field-select option { background: var(--surface2); }
+
+  .btn-add-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border2);
+    border-radius: 6px;
+    color: var(--text2);
+    font-size: 11px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    padding: 7px;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: all .15s;
+  }
+  .btn-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .button-list { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+  .button-item {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .button-item input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 5px 8px;
+    outline: none;
+  }
+  .button-item input:focus { border-color: var(--accent); }
+  .btn-del-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent2);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px;
+    line-height: 1;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--text2);
+    text-align: center;
+    gap: 8px;
+  }
+  .empty-icon { font-size: 36px; opacity: 0.4; }
+  .empty-text { font-size: 12px; line-height: 1.6; opacity: 0.6; }
+
+  /* ─── DEPLOY MODAL ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+  }
+  .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    width: 500px;
+    max-width: 95vw;
+    padding: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    transform: translateY(20px);
+    transition: transform .2s;
+  }
+  .modal-overlay.active .modal { transform: translateY(0); }
+
+  .modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .modal-subtitle {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 24px;
+  }
+
+  .platform-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .platform-card {
+    border: 1.5px solid var(--border2);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--surface2);
+  }
+  .platform-card:hover { border-color: var(--accent5); }
+  .platform-card.selected {
+    border-color: var(--accent3);
+    background: rgba(67,233,123,0.05);
+    box-shadow: 0 0 12px rgba(67,233,123,0.15);
+  }
+
+  .platform-icon { font-size: 24px; }
+  .platform-name { font-size: 13px; font-weight: 700; }
+  .platform-desc { font-size: 10px; color: var(--text2); }
+
+  .platform-token-section {
+    margin-bottom: 20px;
+    display: none;
+  }
+  .platform-token-section.visible { display: block; }
+
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 2000;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--accent3); color: var(--accent3); }
+  .toast.error { border-color: var(--accent2); color: var(--accent2); }
+
+  /* ─── ZOOM CONTROLS ─── */
+  .zoom-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 5px;
+    z-index: 50;
+  }
+  .zoom-btn {
+    background: transparent;
+    border: none;
+    color: var(--text2);
+    font-size: 14px;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zoom-btn:hover { background: var(--surface2); color: var(--text); }
+  .zoom-label {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    min-width: 44px;
+    justify-content: center;
+  }
+
+  /* NODE COLORS */
+  .nt-start .node-header { background: rgba(67,233,123,0.1); }
+  .nt-start .node-icon { background: rgba(67,233,123,0.2); }
+  .nt-start .port { border-color: #43e97b; }
+
+  .nt-message .node-header { background: rgba(108,99,255,0.1); }
+  .nt-message .node-icon { background: rgba(108,99,255,0.2); }
+  .nt-message .port { border-color: #6c63ff; }
+
+  .nt-condition .node-header { background: rgba(247,151,30,0.1); }
+  .nt-condition .node-icon { background: rgba(247,151,30,0.2); }
+  .nt-condition .port { border-color: #f7971e; }
+
+  .nt-product .node-header { background: rgba(79,172,254,0.1); }
+  .nt-product .node-icon { background: rgba(79,172,254,0.2); }
+  .nt-product .port { border-color: #4facfe; }
+
+  .nt-payment .node-header { background: rgba(255,101,132,0.1); }
+  .nt-payment .node-icon { background: rgba(255,101,132,0.2); }
+  .nt-payment .port { border-color: #ff6584; }
+
+  .nt-check_payment .node-header { background: rgba(67,233,123,0.08); }
+  .nt-check_payment .node-icon { background: rgba(67,233,123,0.15); }
+  .nt-check_payment .port { border-color: #43e97b; }
+
+  .nt-send_link .node-header { background: rgba(108,99,255,0.08); }
+  .nt-send_link .node-icon { background: rgba(108,99,255,0.15); }
+  .nt-send_link .port { border-color: #6c63ff; }
+
+  .nt-handoff .node-header { background: rgba(255,101,132,0.08); }
+  .nt-handoff .node-icon { background: rgba(255,101,132,0.15); }
+  .nt-handoff .port { border-color: #ff6584; }
+
+  /* Connection being drawn */
+  .temp-line {
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 6 3;
+    fill: none;
+    pointer-events: none;
+    animation: dash 0.5s linear infinite;
+  }
+  @keyframes dash { to { stroke-dashoffset: -18; } }
+
+  .edge-path {
+    stroke: var(--border2);
+    stroke-width: 2;
+    fill: none;
+    transition: stroke .15s;
+    pointer-events: stroke;
+    cursor: pointer;
+  }
+  .edge-path:hover { stroke: var(--accent2); }
+
+  .edge-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: var(--text2);
+    pointer-events: none;
+  }
+
+  /* Delete node btn */
+  .node-del {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    background: var(--accent2);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .flow-node:hover .node-del { display: flex; }
+  .node-del:hover { transform: scale(1.2); }
+
+  /* mini-map hint */
+  .canvas-hint {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    font-size: 10px;
+    color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">⚡ BotFlow</div>
+  <input class="template-name" type="text" value="Новий шаблон" placeholder="Назва шаблону...">
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="clearCanvas()">Очистити</button>
+    <button class="btn btn-ghost" onclick="loadExample()">Приклад</button>
+    <button class="btn btn-primary" onclick="saveFlow()">Зберегти</button>
+    <button class="btn btn-deploy" onclick="openDeploy()">▶ Деплой</button>
+  </div>
+</header>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar-left">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Блоки</div>
+      <div class="node-palette-item" draggable="true" data-type="start">
+        <div class="node-icon" style="background:rgba(67,233,123,0.2)">🟢</div>
+        <div>
+          <div class="node-label">Старт</div>
+          <div class="node-sublabel">Початок діалогу</div>
+        </div>
+      </div>
+      <div class="node-palette-item" draggable="true" data-type="message">
+        <div class="node-icon" style="background:rgba(108,99,255,0.2)">💬</div>
+        <div>
+          <div class="node-label">Повідомлення</div>
+          <div class="node-sublabel">Текст + кнопки</div>
+        </div>
+      </div>
+      <div class="node-palette-item" draggable="true" data-type="condition">
+        <div class="node-icon" style="background:rgba(247,151,30,0.2)">🔀</div>
+        <div>
+          <div class="node-label">Умова</div>
+          <div class="node-sublabel">Розгалуження</div>
+        </div>
+      </div>
+      <div class="node-palette-item" draggable="true" data-type="product">
+        <div class="node-icon" style="background:rgba(79,172,254,0.2)">🛍️</div>
+        <div>
+          <div class="node-label">Товар</div>
+          <div class="node-sublabel">Картка продукту</div>
+        </div>
+      </div>
+      <div class="node-palette-item" draggable="true" data-type="payment">
+        <div class="node-icon" style="background:rgba(255,101,132,0.2)">💳</div>
+        <div>
+          <div class="node-label">Оплата</div>
+          <div class="node-sublabel">Monobank invoice</div>
+        </div>
+      </div>
+      <div class="node-palette-item" draggable="true" data-type="check_payment">
+        <div class="node-icon" style="background:rgba(67,233,123,0.15)">✅</div>
+        <div>
+          <div class="node-label">Перевірка оплати</div>
+          <div class="node-sublabel">Статус транзакції</div>
+        </div>
+      </div>
+      <div class="node-palette-item" draggable="true" data-type="send_link">
+        <div class="node-icon" style="background:rgba(108,99,255,0.15)">🔗</div>
+        <div>
+          <div class="node-label">Надіслати посилання</div>
+          <div class="node-sublabel">Google Drive</div>
+        </div>
+      </div>
+      <div class="node-palette-item" draggable="true" data-type="handoff">
+        <div class="node-icon" style="background:rgba(255,101,132,0.15)">👤</div>
+        <div>
+          <div class="node-label">Оператор</div>
+          <div class="node-sublabel">Передати людині</div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Підказка</div>
+      <div style="font-size:10px;color:var(--text2);line-height:1.7;">
+        🖱️ Перетягніть блок на канвас<br>
+        ↔ З'єднайте виходи з входами<br>
+        🖱️ Клік на блок — редагувати<br>
+        ✋ ПКМ + drag — переміщення<br>
+        🖱️ Scroll — масштаб
+      </div>
+    </div>
+  </div>
+
+  <!-- CANVAS -->
+  <div id="canvas-wrap">
+    <div id="canvas">
+      <svg id="svg-layer" width="5000" height="5000"></svg>
+    </div>
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="zoom(-0.1)">−</button>
+      <span class="zoom-label" id="zoom-label">100%</span>
+      <button class="zoom-btn" onclick="zoom(0.1)">+</button>
+      <button class="zoom-btn" onclick="resetZoom()" title="Скинути">⊡</button>
+    </div>
+    <div class="canvas-hint">Scroll — масштаб · Правий клік + drag — переміщення</div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel-right">
+    <div class="panel-header">Властивості</div>
+    <div class="panel-content" id="panel-content">
+      <div class="empty-state">
+        <div class="empty-icon">🎯</div>
+        <div class="empty-text">Натисніть на блок щоб редагувати його властивості</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DEPLOY MODAL -->
+<div class="modal-overlay" id="deploy-modal">
+  <div class="modal">
+    <div class="modal-title">🚀 Деплой шаблону</div>
+    <div class="modal-subtitle">Оберіть платформу та підключіть токен</div>
+    <div class="platform-grid">
+      <div class="platform-card" data-platform="telegram" onclick="selectPlatform(this)">
+        <div class="platform-icon">✈️</div>
+        <div class="platform-name">Telegram</div>
+        <div class="platform-desc">Bot Token від @BotFather</div>
+      </div>
+      <div class="platform-card" data-platform="facebook" onclick="selectPlatform(this)">
+        <div class="platform-icon">📘</div>
+        <div class="platform-name">Facebook Page</div>
+        <div class="platform-desc">Page Access Token</div>
+      </div>
+      <div class="platform-card" data-platform="messenger" onclick="selectPlatform(this)">
+        <div class="platform-icon">💬</div>
+        <div class="platform-name">FB Messenger</div>
+        <div class="platform-desc">Messenger API Token</div>
+      </div>
+      <div class="platform-card" data-platform="instagram" onclick="selectPlatform(this)">
+        <div class="platform-icon">📸</div>
+        <div class="platform-name">Instagram</div>
+        <div class="platform-desc">Instagram Business API</div>
+      </div>
+    </div>
+    <div class="platform-token-section" id="token-section">
+      <div class="field-group">
+        <label class="field-label" id="token-label">Access Token</label>
+        <input class="field-input" id="platform-token" type="text" placeholder="Вставте токен тут...">
+      </div>
+      <div class="field-group" id="webhook-info" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:5px;">Ваш Webhook URL</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent5);word-break:break-all;" id="webhook-url">https://yourdomain.com/webhook/telegram</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDeploy()">Скасувати</button>
+      <button class="btn btn-deploy" onclick="confirmDeploy()">✓ Підключити</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────
+// STATE
+// ─────────────────────────────────────
+let nodes = [];
+let edges = [];
+let nodeIdCounter = 1;
+let selectedNodeId = null;
+
+let scale = 1;
+let panX = 0, panY = 0;
+
+let isDraggingNode = false;
+let dragNodeId = null;
+let dragOffsetX = 0, dragOffsetY = 0;
+
+let isPanning = false;
+let panStartX = 0, panStartY = 0;
+let panStartPanX = 0, panStartPanY = 0;
+
+let isConnecting = false;
+let connectingFromNodeId = null;
+let connectingFromPort = null; // 'out-0', 'out-1', etc.
+let tempLine = null;
+let mouseX = 0, mouseY = 0;
+
+const canvasWrap = document.getElementById('canvas-wrap');
+const canvas = document.getElementById('canvas');
+const svgLayer = document.getElementById('svg-layer');
+const panelContent = document.getElementById('panel-content');
+
+// ─────────────────────────────────────
+// NODE DEFINITIONS
+// ─────────────────────────────────────
+const nodeTypes = {
+  start:         { icon:'🟢', label:'Старт',            color:'#43e97b', defaultConfig:{ keyword:'', welcomeText:'Привіт! Чим можу допомогти?' }},
+  message:       { icon:'💬', label:'Повідомлення',     color:'#6c63ff', defaultConfig:{ text:'Ваш текст тут', buttons:[] }},
+  condition:     { icon:'🔀', label:'Умова',            color:'#f7971e', defaultConfig:{ conditions:['Так','Ні'] }},
+  product:       { icon:'🛍️', label:'Товар',           color:'#4facfe', defaultConfig:{ name:'Назва товару', price:'', description:'', imageUrl:'' }},
+  payment:       { icon:'💳', label:'Оплата',           color:'#ff6584', defaultConfig:{ amount:'', currency:'UAH', description:'Оплата замовлення' }},
+  check_payment: { icon:'✅', label:'Перевірка оплати', color:'#43e97b', defaultConfig:{ timeout:'300' }},
+  send_link:     { icon:'🔗', label:'Надіслати посилання', color:'#6c63ff', defaultConfig:{ url:'', message:'Ось ваше посилання:' }},
+  handoff:       { icon:'👤', label:'Оператор',         color:'#ff6584', defaultConfig:{ message:'Передаю вас оператору...' }},
+};
+
+// ─────────────────────────────────────
+// CANVAS TRANSFORM
+// ─────────────────────────────────────
+function applyTransform() {
+  canvas.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  document.getElementById('zoom-label').textContent = Math.round(scale * 100) + '%';
+}
+
+function zoom(delta) {
+  const newScale = Math.max(0.3, Math.min(2, scale + delta));
+  const cx = canvasWrap.clientWidth / 2;
+  const cy = canvasWrap.clientHeight / 2;
+  panX = cx - (cx - panX) * (newScale / scale);
+  panY = cy - (cy - panY) * (newScale / scale);
+  scale = newScale;
+  applyTransform();
+}
+
+function resetZoom() {
+  scale = 1; panX = 40; panY = 40;
+  applyTransform();
+}
+
+canvasWrap.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  zoom(e.deltaY < 0 ? 0.08 : -0.08);
+}, { passive: false });
+
+// Panning with right mouse button
+canvasWrap.addEventListener('mousedown', (e) => {
+  if (e.button === 2) {
+    isPanning = true;
+    panStartX = e.clientX;
+    panStartY = e.clientY;
+    panStartPanX = panX;
+    panStartPanY = panY;
+    canvasWrap.classList.add('panning');
+    e.preventDefault();
+  }
+});
+
+canvasWrap.addEventListener('contextmenu', (e) => e.preventDefault());
+
+window.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX; mouseY = e.clientY;
+
+  if (isPanning) {
+    panX = panStartPanX + (e.clientX - panStartX);
+    panY = panStartPanY + (e.clientY - panStartY);
+    applyTransform();
+  }
+
+  if (isDraggingNode && dragNodeId !== null) {
+    const node = nodes.find(n => n.id === dragNodeId);
+    if (node) {
+      const rect = canvasWrap.getBoundingClientRect();
+      node.x = (e.clientX - rect.left - panX) / scale - dragOffsetX;
+      node.y = (e.clientY - rect.top - panY) / scale - dragOffsetY;
+      const el = document.getElementById('node-' + dragNodeId);
+      if (el) { el.style.left = node.x + 'px'; el.style.top = node.y + 'px'; }
+      drawEdges();
+    }
+  }
+
+  if (isConnecting && tempLine) {
+    const rect = canvasWrap.getBoundingClientRect();
+    const mx = (e.clientX - rect.left - panX) / scale;
+    const my = (e.clientY - rect.top - panY) / scale;
+    const fromNode = nodes.find(n => n.id === connectingFromNodeId);
+    if (fromNode) {
+      const sx = fromNode.x + 220;
+      const sy = fromNode.y + 40;
+      tempLine.setAttribute('d', bezierPath(sx, sy, mx, my));
+    }
+  }
+});
+
+window.addEventListener('mouseup', (e) => {
+  if (isPanning) {
+    isPanning = false;
+    canvasWrap.classList.remove('panning');
+  }
+  if (isDraggingNode) {
+    isDraggingNode = false;
+    dragNodeId = null;
+  }
+  if (isConnecting && e.button === 0) {
+    // Check if released on input port
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    if (target && target.classList.contains('port') && target.classList.contains('port-in')) {
+      const toNodeId = parseInt(target.dataset.nodeId);
+      if (toNodeId !== connectingFromNodeId) {
+        addEdge(connectingFromNodeId, toNodeId, connectingFromPort);
+      }
+    }
+    if (tempLine) { tempLine.remove(); tempLine = null; }
+    isConnecting = false;
+    connectingFromNodeId = null;
+  }
+});
+
+// ─────────────────────────────────────
+// DRAG FROM PALETTE
+// ─────────────────────────────────────
+let paletteDragType = null;
+
+document.querySelectorAll('.node-palette-item').forEach(item => {
+  item.addEventListener('dragstart', (e) => {
+    paletteDragType = item.dataset.type;
+  });
+});
+
+canvasWrap.addEventListener('dragover', (e) => e.preventDefault());
+
+canvasWrap.addEventListener('drop', (e) => {
+  e.preventDefault();
+  if (!paletteDragType) return;
+  const rect = canvasWrap.getBoundingClientRect();
+  const x = (e.clientX - rect.left - panX) / scale - 110;
+  const y = (e.clientY - rect.top - panY) / scale - 40;
+  addNode(paletteDragType, x, y);
+  paletteDragType = null;
+});
+
+// ─────────────────────────────────────
+// NODES
+// ─────────────────────────────────────
+function addNode(type, x, y) {
+  const id = nodeIdCounter++;
+  const def = nodeTypes[type];
+  const node = {
+    id, type, x, y,
+    config: JSON.parse(JSON.stringify(def.defaultConfig)),
+    label: def.label
+  };
+  nodes.push(node);
+  renderNode(node);
+  selectNode(id);
+  return node;
+}
+
+function renderNode(node) {
+  const def = nodeTypes[node.type];
+  const el = document.createElement('div');
+  el.id = 'node-' + node.id;
+  el.className = `flow-node nt-${node.type}`;
+  el.style.left = node.x + 'px';
+  el.style.top = node.y + 'px';
+
+  const preview = getNodePreview(node);
+
+  el.innerHTML = `
+    <button class="node-del" onclick="deleteNode(${node.id})">×</button>
+    <div class="node-header">
+      <div class="node-icon">${def.icon}</div>
+      <div>
+        <div class="node-title" style="color:${def.color}">${def.label}</div>
+      </div>
+    </div>
+    <div class="node-body" id="node-body-${node.id}">${preview}</div>
+    <div class="node-footer" id="node-footer-${node.id}">${getNodeTags(node)}</div>
+    ${node.type !== 'start' ? `<div class="port port-in port-top" data-node-id="${node.id}" title="Вхід"></div>` : ''}
+    ${getOutputPorts(node)}
+  `;
+
+  el.addEventListener('mousedown', (e) => {
+    if (e.button === 0 && !e.target.classList.contains('port') && !e.target.classList.contains('node-del')) {
+      selectNode(node.id);
+      isDraggingNode = true;
+      dragNodeId = node.id;
+      const rect = canvas.getBoundingClientRect();
+      dragOffsetX = (e.clientX - rect.left) / scale - node.x;
+      dragOffsetY = (e.clientY - rect.top) / scale - node.y;
+      e.preventDefault();
+    }
+  });
+
+  // Port mousedown for connection
+  el.querySelectorAll('.port.port-out').forEach(port => {
+    port.addEventListener('mousedown', (e) => {
+      if (e.button === 0) {
+        e.stopPropagation();
+        isConnecting = true;
+        connectingFromNodeId = node.id;
+        connectingFromPort = port.dataset.portId;
+        tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        tempLine.setAttribute('class', 'temp-line');
+        svgLayer.appendChild(tempLine);
+      }
+    });
+  });
+
+  canvas.appendChild(el);
+}
+
+function getOutputPorts(node) {
+  if (node.type === 'condition') {
+    const conds = node.config.conditions || ['Так', 'Ні'];
+    return conds.map((c, i) =>
+      `<div class="port port-out" data-node-id="${node.id}" data-port-id="out-${i}" style="right:-7px;top:${30 + i*24}px;" title="${c}"></div>`
+    ).join('');
+  }
+  if (node.type === 'check_payment') {
+    return `
+      <div class="port port-out" data-node-id="${node.id}" data-port-id="paid" style="right:-7px;top:30px;" title="Оплачено"></div>
+      <div class="port port-out" data-node-id="${node.id}" data-port-id="unpaid" style="right:-7px;top:54px;" title="Не оплачено"></div>
+    `;
+  }
+  if (['handoff'].includes(node.type)) return '';
+  return `<div class="port port-out port-top" data-node-id="${node.id}" data-port-id="out-0" title="Вихід"></div>`;
+}
+
+function getNodePreview(node) {
+  const c = node.config;
+  if (node.type === 'start') return `Ключ: <b>${c.keyword||'будь-яке'}</b>`;
+  if (node.type === 'message') return (c.text||'').substring(0,60) + (c.text?.length > 60 ? '...' : '');
+  if (node.type === 'condition') return (c.conditions||[]).join(' / ');
+  if (node.type === 'product') return `${c.name||''} — ${c.price ? c.price+' грн' : '?'}`;
+  if (node.type === 'payment') return `${c.amount||'?'} ${c.currency}`;
+  if (node.type === 'check_payment') return `Таймаут: ${c.timeout||300}с`;
+  if (node.type === 'send_link') return (c.url||'').substring(0,50) || 'URL не встановлено';
+  if (node.type === 'handoff') return c.message || '';
+  return '';
+}
+
+function getNodeTags(node) {
+  const colors = { start:'#43e97b', message:'#6c63ff', condition:'#f7971e', product:'#4facfe', payment:'#ff6584', check_payment:'#43e97b', send_link:'#6c63ff', handoff:'#ff6584' };
+  const c = colors[node.type] || '#888';
+  const btns = (node.config.buttons || []);
+  let tags = `<span class="node-tag" style="background:${c}22;color:${c}">${nodeTypes[node.type].label}</span>`;
+  if (btns.length) tags += `<span class="node-tag" style="background:#ffffff11;color:#888">${btns.length} кнопок</span>`;
+  return tags;
+}
+
+function updateNodeDisplay(nodeId) {
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  const body = document.getElementById('node-body-' + nodeId);
+  const footer = document.getElementById('node-footer-' + nodeId);
+  if (body) body.innerHTML = getNodePreview(node);
+  if (footer) footer.innerHTML = getNodeTags(node);
+  // Rebuild output ports if condition
+  const el = document.getElementById('node-' + nodeId);
+  if (el && node.type === 'condition') {
+    el.querySelectorAll('.port.port-out').forEach(p => p.remove());
+    el.insertAdjacentHTML('beforeend', getOutputPorts(node));
+    el.querySelectorAll('.port.port-out').forEach(port => {
+      port.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
+          e.stopPropagation();
+          isConnecting = true;
+          connectingFromNodeId = node.id;
+          connectingFromPort = port.dataset.portId;
+          tempLine = document.createElementNS('http://www.w3.org/2000/svg','path');
+          tempLine.setAttribute('class','temp-line');
+          svgLayer.appendChild(tempLine);
+        }
+      });
+    });
+  }
+  drawEdges();
+}
+
+function deleteNode(id) {
+  nodes = nodes.filter(n => n.id !== id);
+  edges = edges.filter(e => e.from !== id && e.to !== id);
+  const el = document.getElementById('node-' + id);
+  if (el) el.remove();
+  drawEdges();
+  if (selectedNodeId === id) {
+    selectedNodeId = null;
+    showEmptyPanel();
+  }
+}
+
+function selectNode(id) {
+  document.querySelectorAll('.flow-node').forEach(el => el.classList.remove('selected'));
+  selectedNodeId = id;
+  const el = document.getElementById('node-' + id);
+  if (el) el.classList.add('selected');
+  const node = nodes.find(n => n.id === id);
+  if (node) renderPanel(node);
+}
+
+// ─────────────────────────────────────
+// EDGES
+// ─────────────────────────────────────
+function addEdge(fromId, toId, portId) {
+  // Avoid duplicates
+  const exists = edges.find(e => e.from === fromId && e.to === toId && e.portId === portId);
+  if (!exists) {
+    edges.push({ id: 'e' + Date.now(), from: fromId, to: toId, portId: portId || 'out-0' });
+    drawEdges();
+  }
+}
+
+function bezierPath(x1, y1, x2, y2) {
+  const cx = (x1 + x2) / 2;
+  return `M ${x1} ${y1} C ${cx} ${y1} ${cx} ${y2} ${x2} ${y2}`;
+}
+
+function getPortPosition(nodeId, portType, portId) {
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return { x: 0, y: 0 };
+  const el = document.getElementById('node-' + nodeId);
+  if (!el) return { x: node.x, y: node.y };
+  const h = el.offsetHeight;
+  const w = 220;
+  if (portType === 'in') return { x: node.x, y: node.y + h / 2 };
+  if (portType === 'out') {
+    // For condition ports, find by data-port-id
+    const portEl = el.querySelector(`[data-port-id="${portId}"]`);
+    if (portEl) {
+      const top = parseInt(portEl.style.top) || h / 2;
+      return { x: node.x + w, y: node.y + top };
+    }
+    return { x: node.x + w, y: node.y + h / 2 };
+  }
+  return { x: node.x, y: node.y };
+}
+
+function drawEdges() {
+  svgLayer.innerHTML = '';
+  edges.forEach(edge => {
+    const from = getPortPosition(edge.from, 'out', edge.portId);
+    const to = getPortPosition(edge.to, 'in');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('class', 'edge-path');
+    path.setAttribute('d', bezierPath(from.x + 7, from.y, to.x - 7, to.y));
+    path.addEventListener('click', () => {
+      if (confirm('Видалити з\'єднання?')) {
+        edges = edges.filter(e => e.id !== edge.id);
+        drawEdges();
+      }
+    });
+
+    // Label for condition ports
+    if (edge.portId && edge.portId.startsWith('out-')) {
+      const fromNode = nodes.find(n => n.id === edge.from);
+      if (fromNode && fromNode.type === 'condition') {
+        const idx = parseInt(edge.portId.replace('out-', ''));
+        const label = (fromNode.config.conditions || [])[idx] || '';
+        if (label) {
+          const mx = (from.x + to.x) / 2;
+          const my = (from.y + to.y) / 2 - 10;
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('class', 'edge-label');
+          text.setAttribute('x', mx);
+          text.setAttribute('y', my);
+          text.setAttribute('text-anchor', 'middle');
+          text.textContent = label;
+          svgLayer.appendChild(text);
+        }
+      }
+    }
+    // check_payment labels
+    if (edge.portId === 'paid' || edge.portId === 'unpaid') {
+      const mx = (from.x + to.x) / 2;
+      const my = (from.y + to.y) / 2 - 10;
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('class', 'edge-label');
+      text.setAttribute('x', mx);
+      text.setAttribute('y', my);
+      text.setAttribute('text-anchor', 'middle');
+      text.textContent = edge.portId === 'paid' ? '✅ Оплачено' : '⏳ Очікування';
+      svgLayer.appendChild(text);
+    }
+
+    svgLayer.appendChild(path);
+  });
+}
+
+// ─────────────────────────────────────
+// PANEL
+// ─────────────────────────────────────
+function showEmptyPanel() {
+  panelContent.innerHTML = `<div class="empty-state">
+    <div class="empty-icon">🎯</div>
+    <div class="empty-text">Натисніть на блок щоб редагувати його властивості</div>
+  </div>`;
+}
+
+function renderPanel(node) {
+  let html = '';
+  const c = node.config;
+
+  if (node.type === 'start') {
+    html = `
+      <div class="field-group">
+        <label class="field-label">Ключове слово (старт)</label>
+        <input class="field-input" id="p-keyword" value="${c.keyword||''}" placeholder="Напр: /start або залиш порожнім">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Перше повідомлення</label>
+        <textarea class="field-textarea" id="p-welcomeText">${c.welcomeText||''}</textarea>
+      </div>
+    `;
+  } else if (node.type === 'message') {
+    const btns = c.buttons || [];
+    html = `
+      <div class="field-group">
+        <label class="field-label">Текст повідомлення</label>
+        <textarea class="field-textarea" id="p-text">${c.text||''}</textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Кнопки відповіді</label>
+        <div class="button-list" id="btn-list">
+          ${btns.map((b,i)=>`<div class="button-item"><input value="${b}" onchange="updateButton(${node.id},${i},this.value)"><button class="btn-del-btn" onclick="removeButton(${node.id},${i})">×</button></div>`).join('')}
+        </div>
+        <button class="btn-add-btn" onclick="addButton(${node.id})">+ Додати кнопку</button>
+      </div>
+    `;
+  } else if (node.type === 'condition') {
+    const conds = c.conditions || ['Так', 'Ні'];
+    html = `
+      <div class="field-group">
+        <label class="field-label">Варіанти умови</label>
+        <div class="button-list" id="btn-list">
+          ${conds.map((b,i)=>`<div class="button-item"><input value="${b}" onchange="updateCondition(${node.id},${i},this.value)"><button class="btn-del-btn" onclick="removeCondition(${node.id},${i})">×</button></div>`).join('')}
+        </div>
+        <button class="btn-add-btn" onclick="addCondition(${node.id})">+ Додати варіант</button>
+      </div>
+    `;
+  } else if (node.type === 'product') {
+    html = `
+      <div class="field-group">
+        <label class="field-label">Назва товару</label>
+        <input class="field-input" id="p-name" value="${c.name||''}">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Ціна (грн)</label>
+        <input class="field-input" id="p-price" type="number" value="${c.price||''}">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Опис</label>
+        <textarea class="field-textarea" id="p-description">${c.description||''}</textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label">URL зображення</label>
+        <input class="field-input" id="p-imageUrl" value="${c.imageUrl||''}" placeholder="https://...">
+      </div>
+    `;
+  } else if (node.type === 'payment') {
+    html = `
+      <div class="field-group">
+        <label class="field-label">Сума (грн)</label>
+        <input class="field-input" id="p-amount" type="number" value="${c.amount||''}">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Валюта</label>
+        <select class="field-select" id="p-currency">
+          <option ${c.currency==='UAH'?'selected':''}>UAH</option>
+          <option ${c.currency==='USD'?'selected':''}>USD</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Призначення платежу</label>
+        <input class="field-input" id="p-description" value="${c.description||''}">
+      </div>
+    `;
+  } else if (node.type === 'check_payment') {
+    html = `
+      <div class="field-group">
+        <label class="field-label">Таймаут очікування (сек)</label>
+        <input class="field-input" id="p-timeout" type="number" value="${c.timeout||300}">
+      </div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.7;background:var(--surface2);padding:10px;border-radius:8px;border:1px solid var(--border);">
+        ✅ <b>Оплачено</b> — продовжує сценарій<br>
+        ⏳ <b>Не оплачено</b> — надсилає нагадування
+      </div>
+    `;
+  } else if (node.type === 'send_link') {
+    html = `
+      <div class="field-group">
+        <label class="field-label">Google Drive URL</label>
+        <input class="field-input" id="p-url" value="${c.url||''}" placeholder="https://drive.google.com/...">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Текст повідомлення</label>
+        <textarea class="field-textarea" id="p-message">${c.message||''}</textarea>
+      </div>
+    `;
+  } else if (node.type === 'handoff') {
+    html = `
+      <div class="field-group">
+        <label class="field-label">Повідомлення при передачі</label>
+        <textarea class="field-textarea" id="p-message">${c.message||''}</textarea>
+      </div>
+    `;
+  }
+
+  html += `<div style="margin-top:16px"><button class="btn btn-primary" style="width:100%" onclick="applyPanel(${node.id})">Застосувати</button></div>`;
+  panelContent.innerHTML = html;
+}
+
+function applyPanel(nodeId) {
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  const c = node.config;
+  const get = (id) => { const el = document.getElementById(id); return el ? el.value : null; };
+
+  if (node.type === 'start')         { c.keyword = get('p-keyword'); c.welcomeText = get('p-welcomeText'); }
+  else if (node.type === 'message')  { c.text = get('p-text'); }
+  else if (node.type === 'product')  { c.name = get('p-name'); c.price = get('p-price'); c.description = get('p-description'); c.imageUrl = get('p-imageUrl'); }
+  else if (node.type === 'payment')  { c.amount = get('p-amount'); c.currency = get('p-currency'); c.description = get('p-description'); }
+  else if (node.type === 'check_payment') { c.timeout = get('p-timeout'); }
+  else if (node.type === 'send_link') { c.url = get('p-url'); c.message = get('p-message'); }
+  else if (node.type === 'handoff')  { c.message = get('p-message'); }
+
+  updateNodeDisplay(nodeId);
+  showToast('✓ Збережено', 'success');
+}
+
+function addButton(nodeId) {
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  if (!node.config.buttons) node.config.buttons = [];
+  node.config.buttons.push('Кнопка ' + (node.config.buttons.length + 1));
+  renderPanel(node);
+  updateNodeDisplay(nodeId);
+}
+
+function removeButton(nodeId, idx) {
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  node.config.buttons.splice(idx, 1);
+  renderPanel(node);
+  updateNodeDisplay(nodeId);
+}
+
+function updateButton(nodeId, idx, val) {
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  node.config.buttons[idx] = val;
+  updateNodeDisplay(nodeId);
+}
+
+function addCondition(nodeId) {
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  node.config.conditions.push('Варіант ' + (node.config.conditions.length + 1));
+  renderPanel(node);
+  updateNodeDisplay(nodeId);
+}
+
+function removeCondition(nodeId, idx) {
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  node.config.conditions.splice(idx, 1);
+  edges = edges.filter(e => !(e.from === nodeId && e.portId === 'out-' + idx));
+  renderPanel(node);
+  updateNodeDisplay(nodeId);
+  drawEdges();
+}
+
+function updateCondition(nodeId, idx, val) {
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  node.config.conditions[idx] = val;
+  updateNodeDisplay(nodeId);
+  drawEdges();
+}
+
+// ─────────────────────────────────────
+// SAVE / LOAD
+// ─────────────────────────────────────
+async function saveFlow() {
+  const name = document.querySelector('.template-name').value;
+
+  // Форматуємо вузли і з'єднання для API
+  const apiNodes = nodes.map(n => ({
+    id:        n.id,
+    node_type: n.type,
+    x:         n.x,
+    y:         n.y,
+    config:    n.config
+  }));
+
+  const apiEdges = edges.map(e => ({
+    from:   e.from,
+    to:     e.to,
+    portId: e.portId
+  }));
+
+  const btn = document.querySelector('.btn-primary');
+  btn.textContent = 'Збереження...';
+  btn.disabled = true;
+
+  try {
+    // Якщо шаблон ще не існує — створюємо новий
+    if (!window.currentTemplateId) {
+      const createResp = await fetch('/api/templates', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name })
+      });
+      const createData = await createResp.json();
+      window.currentTemplateId = createData.data.id;
+    }
+
+    // Зберігаємо схему
+    const resp = await fetch(`/api/templates/${window.currentTemplateId}`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ name, nodes: apiNodes, edges: apiEdges })
+    });
+
+    const data = await resp.json();
+
+    if (data.ok) {
+      showToast(`✓ Збережено в БД (ID: ${window.currentTemplateId})`, 'success');
+      // Оновлюємо ID вузлів з серверними
+      data.data.nodes.forEach(serverNode => {
+        const localNode = nodes.find(n =>
+          Math.round(n.x) === Math.round(serverNode.x) &&
+          Math.round(n.y) === Math.round(serverNode.y)
+        );
+        if (localNode) localNode.serverId = serverNode.id;
+      });
+    } else {
+      showToast('Помилка збереження', 'error');
+    }
+
+  } catch (err) {
+    console.error(err);
+    showToast('Сервер недоступний', 'error');
+  } finally {
+    btn.textContent = 'Зберегти';
+    btn.disabled = false;
+  }
+}
+
+function clearCanvas() {
+  if (!confirm('Очистити канвас?')) return;
+  nodes = []; edges = [];
+  canvas.querySelectorAll('.flow-node').forEach(e => e.remove());
+  svgLayer.innerHTML = '';
+  showEmptyPanel();
+}
+
+function loadExample() {
+  clearCanvas();
+  document.querySelector('.template-name').value = 'Продаж курсу — Приклад';
+
+  panX = 40; panY = 40; scale = 1; applyTransform();
+
+  const n1 = addNode('start', 60, 80);
+  const n2 = addNode('message', 340, 80);
+  const n3 = addNode('condition', 340, 240);
+  const n4 = addNode('product', 620, 100);
+  const n5 = addNode('payment', 620, 280);
+  const n6 = addNode('check_payment', 620, 450);
+  const n7 = addNode('send_link', 900, 380);
+  const n8 = addNode('handoff', 340, 400);
+
+  n1.config.welcomeText = 'Привіт! 👋 Чим можу допомогти?';
+  n2.config.text = 'Оберіть що вас цікавить:';
+  n2.config.buttons = ['🛍 Переглянути курс', '📞 Підтримка'];
+  n3.config.conditions = ['🛍 Переглянути курс', '📞 Підтримка'];
+  n4.config.name = 'Python Pro курс'; n4.config.price = '1499';
+  n4.config.description = '30 уроків, сертифікат, довічний доступ';
+  n5.config.amount = '1499'; n5.config.description = 'Python Pro курс';
+  n6.config.timeout = '600';
+  n7.config.url = 'https://drive.google.com/...';
+  n7.config.message = '🎉 Дякуємо за покупку! Ось ваш доступ:';
+  n8.config.message = 'Передаю вас оператору підтримки...';
+
+  [n1,n2,n3,n4,n5,n6,n7,n8].forEach(n => updateNodeDisplay(n.id));
+
+  addEdge(n1.id, n2.id, 'out-0');
+  addEdge(n2.id, n3.id, 'out-0');
+  addEdge(n3.id, n4.id, 'out-0');
+  addEdge(n3.id, n8.id, 'out-1');
+  addEdge(n4.id, n5.id, 'out-0');
+  addEdge(n5.id, n6.id, 'out-0');
+  addEdge(n6.id, n7.id, 'paid');
+  addEdge(n6.id, n5.id, 'unpaid');
+
+  showToast('✓ Приклад завантажено', 'success');
+}
+
+// ─────────────────────────────────────
+// DEPLOY
+// ─────────────────────────────────────
+let selectedPlatform = null;
+
+function openDeploy() {
+  document.getElementById('deploy-modal').classList.add('active');
+}
+function closeDeploy() {
+  document.getElementById('deploy-modal').classList.remove('active');
+  selectedPlatform = null;
+  document.querySelectorAll('.platform-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('token-section').classList.remove('visible');
+}
+
+function selectPlatform(card) {
+  document.querySelectorAll('.platform-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedPlatform = card.dataset.platform;
+  const section = document.getElementById('token-section');
+  section.classList.add('visible');
+  const labels = {
+    telegram: 'Bot Token (від @BotFather)',
+    facebook: 'Page Access Token',
+    messenger: 'Messenger API Token',
+    instagram: 'Instagram Business Token'
+  };
+  const webhooks = {
+    telegram: 'https://yourdomain.com/webhook/telegram',
+    facebook: 'https://yourdomain.com/webhook/facebook',
+    messenger: 'https://yourdomain.com/webhook/facebook',
+    instagram: 'https://yourdomain.com/webhook/instagram'
+  };
+  document.getElementById('token-label').textContent = labels[selectedPlatform] || 'Token';
+  document.getElementById('webhook-url').textContent = webhooks[selectedPlatform] || '';
+}
+
+function confirmDeploy() {
+  const token = document.getElementById('platform-token').value.trim();
+  if (!selectedPlatform) { showToast('Оберіть платформу', 'error'); return; }
+  if (!token) { showToast('Введіть токен', 'error'); return; }
+  // In production: POST to /api/deploy
+  console.log('Deploy:', { platform: selectedPlatform, token, template: exportFlow() });
+  closeDeploy();
+  showToast(`✓ Підключено до ${selectedPlatform}!`, 'success');
+}
+
+function exportFlow() {
+  return { name: document.querySelector('.template-name').value, nodes, edges };
+}
+
+// ─────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  void t.offsetWidth;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─────────────────────────────────────
+// INIT
+// ─────────────────────────────────────
+resetZoom();
+loadExample();
+</script>
+</body>
+</html>
